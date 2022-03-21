@@ -4,10 +4,13 @@
 #include <QSpinBox>
 #include <QPushButton>
 #include <QDebug>
+#include <vector>
+#include <set>
 
 using namespace std;
 
-constexpr int N = 9; // N X N sudoku grid
+constexpr int N = 4; // N X N sudoku grid
+constexpr int sqrt_N = 2;
 constexpr int WINDOW_L = 1920;
 constexpr int WINDOW_W = 1080;
 
@@ -41,12 +44,67 @@ vector<vector<int>> getSudokuGrid() {
     return res;
 }
 
+void setSudokuGrid(const vector<vector<int>>& grid) {
+    for(int i = 0; i < N; ++i) {
+        for(int j = 0; j < N; ++j) {
+            sudokuGrid[i][j]->setValue(grid[i][j]);
+        }
+    }
+}
+
+void clearSudokuGrid() {
+    for(int i = 0; i < N; ++i) {
+        for(int j = 0; j < N; ++j) {
+            sudokuGrid[i][j]->setValue(0);
+        }
+    }
+}
+
 void generateRandomSudoku() {
     qDebug() << QString("Generating random sudoku!");
 }
 
-bool isSudokuGridValid(const vector<vector<int>> &grid) {
-    return false;
+bool isSudokuGridValid(const vector<vector<int>> &grid) { 
+    set<int> target;
+    for (int i = 1; i <= N; ++i) {
+        target.insert(i);
+    }
+
+    // for each row
+    for (int i = 0; i < N; ++i) {
+        set<int> cur;
+        for (int j = 0; j < N; j++) {
+            cur.insert(grid[i][j]);
+        }
+        if (cur != target)
+            return false;
+    }
+
+    // for each column
+    for (int i = 0; i < N; ++i) {
+        set<int> cur;
+        for (int j = 0; j < N; j++) {
+            cur.insert(grid[j][i]);
+        }
+        if (cur != target)
+            return false;
+    }
+
+    // for each box
+    for (int i = 0; i < N; i += sqrt_N) {
+        for (int j = 0; j < N; j += sqrt_N) {
+            set<int> cur;
+            for (int k = j; k < sqrt_N + j; ++k) {
+                for (int l = i; l < sqrt_N + i; ++l) {
+                    cur.insert(grid[k][l]);
+                }
+            }
+            if (cur != target)
+                return false;
+        }
+    }
+
+    return true;
 }
 
 MainWindow::MainWindow(QWidget *parent)
