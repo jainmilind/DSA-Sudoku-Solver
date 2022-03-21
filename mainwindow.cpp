@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include <QDesktopWidget>
 #include <QGridLayout>
 #include <QLabel>
 #include <QSpinBox>
@@ -8,7 +7,9 @@
 
 using namespace std;
 
-constexpr int N = 4; // N X N sudoku grid
+constexpr int N = 9; // N X N sudoku grid
+constexpr int WINDOW_L = 1920;
+constexpr int WINDOW_W = 1080;
 
 vector<vector<QSpinBox*>> sudokuGrid;
 
@@ -51,12 +52,8 @@ bool isSudokuGridValid(const vector<vector<int>> &grid) {
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    {
-        QDesktopWidget *temp = new QDesktopWidget();
-        this->setFixedSize(temp->width()*0.5, temp->height()*0.5);
-        delete temp;
-        this->setWindowTitle(QString::fromStdString("A " + to_string(N) + " X " + to_string(N) + " Sudoku Solver"));
-    }
+    this->setFixedSize(WINDOW_L*0.5, WINDOW_W*0.5);
+    this->setWindowTitle(QString::fromStdString("A " + to_string(N) + " X " + to_string(N) + " Sudoku Solver"));
 
     QWidget *container = new QWidget(this);
     this->setCentralWidget(container);
