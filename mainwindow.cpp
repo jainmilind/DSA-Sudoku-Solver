@@ -7,6 +7,8 @@
 #include <QMessageBox>
 #include <vector>
 #include <set>
+#include <chrono>
+#include <random>
 
 using namespace std;
 
@@ -19,9 +21,9 @@ vector<vector<QSpinBox*>> sudokuGrid;
 
 void initializeSudokuGrid(QGridLayout* layout) {
     sudokuGrid.resize(N);
-    for(int i = 0; i < N; ++i) {
+    for (int i = 0; i < N; ++i) {
         sudokuGrid[i].resize(N);
-        for(int j = 0; j < N; ++j) {
+        for (int j = 0; j < N; ++j) {
             QSpinBox* box = new QSpinBox;
             box->setMinimum(0);
             box->setMaximum(N);
@@ -36,9 +38,9 @@ void initializeSudokuGrid(QGridLayout* layout) {
 vector<vector<int>> getSudokuGrid() {
     vector<vector<int>> res;
     res.resize(N);
-    for(int i = 0; i < N; ++i) {
+    for (int i = 0; i < N; ++i) {
         res[i].resize(N);
-        for(int j = 0; j < N; ++j) {
+        for (int j = 0; j < N; ++j) {
             res[i][j] = sudokuGrid[i][j]->value();
         }
     }
@@ -46,26 +48,96 @@ vector<vector<int>> getSudokuGrid() {
 }
 
 void setSudokuGrid(const vector<vector<int>>& grid) {
-    for(int i = 0; i < N; ++i) {
-        for(int j = 0; j < N; ++j) {
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
             sudokuGrid[i][j]->setValue(grid[i][j]);
         }
     }
 }
 
 void clearSudokuGrid() {
-    for(int i = 0; i < N; ++i) {
-        for(int j = 0; j < N; ++j) {
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
             sudokuGrid[i][j]->setValue(0);
         }
     }
 }
 
-void generateRandomSudoku() {
-    qDebug() << QString("Generating random sudoku!");
+bool isPartialSudokuGridValid(const vector<vector<int>> &grid) {
+    // for each row
+    for (int i = 0; i < N; ++i) {
+        set<int> cur;
+        for (int j = 0; j < N; j++) {
+            if (grid[i][j] == 0)
+                continue;
+            if (cur.count(grid[i][j]))
+                return false;
+            cur.insert(grid[i][j]);
+        }
+    }
+
+    // for each column
+    for (int i = 0; i < N; ++i) {
+        set<int> cur;
+        for (int j = 0; j < N; j++) {
+            if (grid[j][i] == 0)
+                continue;
+            if (cur.count(grid[j][i]))
+                return false;
+            cur.insert(grid[j][i]);
+        }
+    }
+
+    // for each box
+    for (int i = 0; i < N; i += sqrt_N) {
+        for (int j = 0; j < N; j += sqrt_N) {
+            set<int> cur;
+            for (int k = j; k < sqrt_N + j; ++k) {
+                for (int l = i; l < sqrt_N + i; ++l) {
+                    if (grid[k][l] == 0)
+                        continue;
+                    if (cur.count(grid[k][l]))
+                        return false;
+                    cur.insert(grid[k][l]);
+                }
+            }
+        }
+    }
+    return true;
 }
 
-bool isSudokuGridValid(const vector<vector<int>> &grid) { 
+void generateRandomSudoku() {
+    clearSudokuGrid();
+
+    vector<vector<int>> grid(N, vector<int>(N, 0));
+    mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+    const int fill_count = rng() % N + N;
+
+    for (int i = 0; i < fill_count; ++i) {
+
+        int coords = uniform_int_distribution<int>(0, N * N - 1)(rng);
+        int x_coord = coords / N;
+        int y_coord = coords % N;
+        int value = uniform_int_distribution<int>(1, N)(rng);
+
+        if (grid[x_coord][y_coord] == 0) {
+            grid[x_coord][y_coord] = value;
+
+            if (!isPartialSudokuGridValid(grid)) {
+                --i;
+                grid[x_coord][y_coord] = 0;
+            }
+        }
+
+        else {
+            --i;
+        }
+    }
+
+    setSudokuGrid(grid);
+}
+
+bool isSudokuGridValid(const vector<vector<int>> &grid) {
     set<int> target;
     for (int i = 1; i <= N; ++i) {
         target.insert(i);
@@ -125,7 +197,7 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(verifySudoku, N+1, 0, 1, N, Qt::AlignHCenter);
     QObject::connect(verifySudoku, &QPushButton::clicked, [&](){
         vector<vector<int>> grid = getSudokuGrid();
-        bool valid = isSudokuGridValid(grid);
+        bool valid = isPartialSudokuGridValid(grid);
         QMessageBox *Msgbox = new QMessageBox;
         if(valid) {
             Msgbox->setText("The Sudoku is valid!");
