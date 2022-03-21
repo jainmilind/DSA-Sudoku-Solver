@@ -12,8 +12,8 @@
 
 using namespace std;
 
-constexpr int N = 9; // N X N sudoku grid
-constexpr int sqrt_N = 3;
+constexpr int N = 16; // N X N sudoku grid
+constexpr int sqrt_N = 4;
 constexpr int WINDOW_L = 1920;
 constexpr int WINDOW_W = 1080;
 
@@ -106,37 +106,6 @@ bool isPartialSudokuGridValid(const vector<vector<int>> &grid) {
     return true;
 }
 
-void generateRandomSudoku() {
-    clearSudokuGrid();
-
-    vector<vector<int>> grid(N, vector<int>(N, 0));
-    mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-    const int fill_count = rng() % N + N;
-
-    for (int i = 0; i < fill_count; ++i) {
-
-        int coords = uniform_int_distribution<int>(0, N * N - 1)(rng);
-        int x_coord = coords / N;
-        int y_coord = coords % N;
-        int value = uniform_int_distribution<int>(1, N)(rng);
-
-        if (grid[x_coord][y_coord] == 0) {
-            grid[x_coord][y_coord] = value;
-
-            if (!isPartialSudokuGridValid(grid)) {
-                --i;
-                grid[x_coord][y_coord] = 0;
-            }
-        }
-
-        else {
-            --i;
-        }
-    }
-
-    setSudokuGrid(grid);
-}
-
 bool isSudokuGridValid(const vector<vector<int>> &grid) {
     set<int> target;
     for (int i = 1; i <= N; ++i) {
@@ -180,10 +149,69 @@ bool isSudokuGridValid(const vector<vector<int>> &grid) {
     return true;
 }
 
+bool solveSudokuGrid(vector<vector<int>> &grid, int x = 0, int y = 0) {
+    if (x == N)
+        return isSudokuGridValid(grid);
+
+    if (y == N)
+        return solveSudokuGrid(grid, x + 1, 0);
+
+    if (grid[x][y] != 0)
+        return solveSudokuGrid(grid, x, y + 1);
+
+    for (int i = 1; i <= N; ++i) {
+        grid[x][y] = i;
+        if (isPartialSudokuGridValid(grid)) {
+            bool res = solveSudokuGrid(grid, x, y + 1);
+            if (res)
+                return res;
+        }
+        grid[x][y] = 0;
+    }
+
+    return false;
+}
+
+void generateRandomSudoku() {
+    clearSudokuGrid();
+    vector<vector<int>> grid, gridCheck;
+    mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+
+    do {
+        grid = vector<vector<int>>(N, vector<int>(N));
+        const int fill_count = rng() % N + N;
+
+        for (int i = 0; i < fill_count; ++i) {
+
+            int coords = uniform_int_distribution<int>(0, N * N - 1)(rng);
+            int x_coord = coords / N;
+            int y_coord = coords % N;
+            if (grid[x_coord][y_coord] == 0) {
+                for (int value = 1; value <= N; ++value) {
+                    grid[x_coord][y_coord] = value;
+
+                    if (!isPartialSudokuGridValid(grid)) {
+                        grid[x_coord][y_coord] = 0;
+                    }
+                    else {
+                        goto AC;
+                    }
+                }
+            }
+            else i--;
+            AC:;
+        }
+        gridCheck = grid;
+
+    } while (!solveSudokuGrid(gridCheck));
+
+    setSudokuGrid(grid);
+}
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
-    this->setFixedSize(WINDOW_L*0.5, WINDOW_W*0.5);
+    this->setFixedSize(WINDOW_L*0.75, WINDOW_W*0.75);
     this->setWindowTitle(QString::fromStdString("A " + to_string(N) + " X " + to_string(N) + " Sudoku Solver"));
 
     QWidget *container = new QWidget(this);
@@ -211,7 +239,14 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *solveSudoku = new QPushButton("Solve Sudoku");
     layout->addWidget(solveSudoku, N+2, 0, 1, N, Qt::AlignHCenter);
     QObject::connect(solveSudoku, &QPushButton::clicked, [&](){
-        qDebug() << QString("Solve the sudoku!");
+
+        vector<vector<int>> grid = getSudokuGrid();
+
+        if (solveSudokuGrid(grid))
+           setSudokuGrid(grid);
+        else
+            qDebug() << QString("LMAO DED");
+
     });
 
     QPushButton *generateSudoku = new QPushButton("Generate Sudoku");
