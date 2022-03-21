@@ -4,6 +4,7 @@
 #include <QSpinBox>
 #include <QPushButton>
 #include <QDebug>
+#include <QMessageBox>
 #include <vector>
 #include <set>
 
@@ -124,7 +125,15 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(verifySudoku, N+1, 0, 1, N, Qt::AlignHCenter);
     QObject::connect(verifySudoku, &QPushButton::clicked, [&](){
         vector<vector<int>> grid = getSudokuGrid();
-        qDebug() << isSudokuGridValid(grid);
+        bool valid = isSudokuGridValid(grid);
+        QMessageBox *Msgbox = new QMessageBox;
+        if(valid) {
+            Msgbox->setText("The Sudoku is valid!");
+        }
+        else {
+            Msgbox->setText("The Sudoku is invalid!");
+        }
+        Msgbox->exec();
     });
 
     QPushButton *solveSudoku = new QPushButton("Solve Sudoku");
