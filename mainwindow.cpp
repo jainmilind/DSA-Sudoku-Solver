@@ -9,8 +9,8 @@
 
 using namespace std;
 
-constexpr int N = 4; // N X N sudoku grid
-constexpr int sqrt_N = 2;
+constexpr int N = 9; // N X N sudoku grid
+constexpr int sqrt_N = 3;
 constexpr int WINDOW_L = 1920;
 constexpr int WINDOW_W = 1080;
 
@@ -120,23 +120,29 @@ MainWindow::MainWindow(QWidget *parent)
 
     initializeSudokuGrid(layout);
 
-    QPushButton *generateSudoku = new QPushButton("Generate Sudoku");
-    layout->addWidget(generateSudoku, N+1, 0, 1, N, Qt::AlignHCenter);
-    QObject::connect(generateSudoku, &QPushButton::clicked, [&](){
-        generateRandomSudoku();
-    });
-
     QPushButton *verifySudoku = new QPushButton("Verify Sudoku");
-    layout->addWidget(verifySudoku, N+2, 0, 1, N, Qt::AlignHCenter);
+    layout->addWidget(verifySudoku, N+1, 0, 1, N, Qt::AlignHCenter);
     QObject::connect(verifySudoku, &QPushButton::clicked, [&](){
         vector<vector<int>> grid = getSudokuGrid();
         qDebug() << isSudokuGridValid(grid);
     });
 
     QPushButton *solveSudoku = new QPushButton("Solve Sudoku");
-    layout->addWidget(solveSudoku, N+3, 0, 1, N, Qt::AlignHCenter);
+    layout->addWidget(solveSudoku, N+2, 0, 1, N, Qt::AlignHCenter);
     QObject::connect(solveSudoku, &QPushButton::clicked, [&](){
         qDebug() << QString("Solve the sudoku!");
+    });
+
+    QPushButton *generateSudoku = new QPushButton("Generate Sudoku");
+    layout->addWidget(generateSudoku, N+3, 0, 1, N, Qt::AlignHCenter);
+    QObject::connect(generateSudoku, &QPushButton::clicked, [&](){
+        generateRandomSudoku();
+    });
+
+    QPushButton *clearSudoku = new QPushButton("Clear Sudoku");
+    layout->addWidget(clearSudoku, N+4, 0, 1, N, Qt::AlignHCenter);
+    QObject::connect(clearSudoku, &QPushButton::clicked, [&](){
+        clearSudokuGrid();
     });
 
     container->setLayout(layout);
