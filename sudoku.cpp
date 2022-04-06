@@ -10,28 +10,47 @@ constexpr int sqrt_N = 3;
 enum SUDOKU_STATUS {INVALID, PARTIALLY_FILLED, COMPLETED};
 
 bool canPlace(const vector<vector<int>> &grid, int val, int x, int y) {
-    // iterate over row
+    if(grid[x][y] != 0) {
+        return false;
+    }
 
-    // iterate over column
+    // iterate in column
+    for(int i = 0; i < N ; ++i) {
+        if(grid[i][y] == val)
+            return false;
+    }
 
-    // iterate over box
+    // iterate in row
+    for(int j = 0; j < N ; ++j) {
+        if(grid[x][j] == val)
+            return false;
+    }
+
+    // iterate in box
+    int box_top_x = (x/sqrt_N)*sqrt_N;
+    int box_top_y = (y/sqrt_N)*sqrt_N;
+    for(int i = box_top_x; i < box_top_x + sqrt_N; ++i) {
+        for(int j = box_top_y; j < box_top_y + sqrt_N; ++j) {
+            if(grid[i][j] == val)
+                return false;
+        }
+    }
 
     return true;
 }
 
 SUDOKU_STATUS getSudokuStatus(const vector<vector<int>> &grid) {
-    // merge partially and fully filled functions
-}
+    int empty_cell_cnt = 0;
 
-bool isPartialSudokuGridValid(const vector<vector<int>> &grid) {
-    // for each row
     for (int i = 0; i < N; ++i) {
         set<int> cur;
         for (int j = 0; j < N; j++) {
-            if (grid[i][j] == 0)
+            if (grid[i][j] == 0) {
+                ++empty_cell_cnt;
                 continue;
+            }
             if (cur.count(grid[i][j]))
-                return false;
+                return INVALID;
             cur.insert(grid[i][j]);
         }
     }
@@ -40,10 +59,12 @@ bool isPartialSudokuGridValid(const vector<vector<int>> &grid) {
     for (int i = 0; i < N; ++i) {
         set<int> cur;
         for (int j = 0; j < N; j++) {
-            if (grid[j][i] == 0)
+            if (grid[j][i] == 0) {
+                ++empty_cell_cnt;
                 continue;
+            }
             if (cur.count(grid[j][i]))
-                return false;
+                return INVALID;
             cur.insert(grid[j][i]);
         }
     }
@@ -54,64 +75,29 @@ bool isPartialSudokuGridValid(const vector<vector<int>> &grid) {
             set<int> cur;
             for (int k = j; k < sqrt_N + j; ++k) {
                 for (int l = i; l < sqrt_N + i; ++l) {
-                    if (grid[k][l] == 0)
+                    if (grid[k][l] == 0) {
+                        ++empty_cell_cnt;
                         continue;
+                    }
                     if (cur.count(grid[k][l]))
-                        return false;
+                        return INVALID;
                     cur.insert(grid[k][l]);
                 }
             }
         }
     }
-    return true;
-}
 
-bool isSudokuGridValid(const vector<vector<int>> &grid) {
-    set<int> target;
-    for (int i = 1; i <= N; ++i) {
-        target.insert(i);
+    if(empty_cell_cnt == 0) {
+        return COMPLETED;
     }
-
-    // for each row
-    for (int i = 0; i < N; ++i) {
-        set<int> cur;
-        for (int j = 0; j < N; j++) {
-            cur.insert(grid[i][j]);
-        }
-        if (cur != target)
-            return false;
+    else {
+        return PARTIALLY_FILLED;
     }
-
-    // for each column
-    for (int i = 0; i < N; ++i) {
-        set<int> cur;
-        for (int j = 0; j < N; j++) {
-            cur.insert(grid[j][i]);
-        }
-        if (cur != target)
-            return false;
-    }
-
-    // for each box
-    for (int i = 0; i < N; i += sqrt_N) {
-        for (int j = 0; j < N; j += sqrt_N) {
-            set<int> cur;
-            for (int k = j; k < sqrt_N + j; ++k) {
-                for (int l = i; l < sqrt_N + i; ++l) {
-                    cur.insert(grid[k][l]);
-                }
-            }
-            if (cur != target)
-                return false;
-        }
-    }
-
-    return true;
 }
 
 bool solveSudokuGrid(vector<vector<int>> &grid, int x = 0, int y = 0) {
     if (x == N)
-        return isSudokuGridValid(grid);
+        return getSudokuStatus(grid) == COMPLETED;
 
     if (y == N)
         return solveSudokuGrid(grid, x + 1, 0);
@@ -121,7 +107,8 @@ bool solveSudokuGrid(vector<vector<int>> &grid, int x = 0, int y = 0) {
 
     for (int i = 1; i <= N; ++i) {
         grid[x][y] = i;
-        if (isPartialSudokuGridValid(grid)) {
+        SUDOKU_STATUS status = getSudokuStatus(grid);
+        if (status == PARTIALLY_FILLED || status == COMPLETED) {
             bool res = solveSudokuGrid(grid, x, y + 1);
             if (res)
                 return res;
@@ -149,7 +136,7 @@ vector<vector<int>> generateRandomSudoku() {
                 for (int value = 1; value <= N; ++value) {
                     grid[x_coord][y_coord] = value;
 
-                    if (!isPartialSudokuGridValid(grid)) {
+                    if (getSudokuStatus(grid) == INVALID) {
                         grid[x_coord][y_coord] = 0;
                     }
                     else {

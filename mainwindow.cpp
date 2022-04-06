@@ -74,13 +74,16 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(verifySudoku, N+1, 0, 1, N, Qt::AlignHCenter);
     QObject::connect(verifySudoku, &QPushButton::clicked, [&](){
         vector<vector<int>> grid = getSudokuGrid();
-        bool valid = isPartialSudokuGridValid(grid);
+        SUDOKU_STATUS valid = getSudokuStatus(grid);
         QMessageBox *Msgbox = new QMessageBox;
-        if(valid) {
-            Msgbox->setText("The Sudoku is valid!");
+        if(valid == INVALID) {
+            Msgbox->setText("The Sudoku is invalid!");
+        }
+        else if(valid == COMPLETED) {
+            Msgbox->setText("Congratulations! The Sudoku is completed!");
         }
         else {
-            Msgbox->setText("The Sudoku is invalid!");
+            Msgbox->setText("The Sudoku is valid!");
         }
         Msgbox->exec();
     });
