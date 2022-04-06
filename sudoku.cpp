@@ -4,8 +4,8 @@
 #include <random>
 using namespace std;
 
-constexpr int N = 9; // N X N sudoku grid
-constexpr int sqrt_N = 3;
+constexpr int sqrt_N = 2;
+constexpr int N = sqrt_N*sqrt_N; // N X N sudoku grid
 
 enum SUDOKU_STATUS {INVALID, PARTIALLY_FILLED, COMPLETED};
 
@@ -97,7 +97,7 @@ SUDOKU_STATUS getSudokuStatus(const vector<vector<int>> &grid) {
 
 bool solveSudokuGrid(vector<vector<int>> &grid, int x = 0, int y = 0) {
     if (x == N)
-        return getSudokuStatus(grid) == COMPLETED;
+        return true;
 
     if (y == N)
         return solveSudokuGrid(grid, x + 1, 0);
@@ -106,14 +106,16 @@ bool solveSudokuGrid(vector<vector<int>> &grid, int x = 0, int y = 0) {
         return solveSudokuGrid(grid, x, y + 1);
 
     for (int i = 1; i <= N; ++i) {
-        grid[x][y] = i;
-        SUDOKU_STATUS status = getSudokuStatus(grid);
-        if (status == PARTIALLY_FILLED || status == COMPLETED) {
-            bool res = solveSudokuGrid(grid, x, y + 1);
-            if (res)
-                return res;
+        if(canPlace(grid, i, x, y)) {
+            grid[x][y] = i;
+            bool nxt = solveSudokuGrid(grid, x, y+1);
+            if(nxt) {
+                return nxt;
+            }
+            else {
+                grid[x][y] = 0;
+            }
         }
-        grid[x][y] = 0;
     }
 
     return false;
