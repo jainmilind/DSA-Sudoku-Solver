@@ -8,8 +8,8 @@
 #include "sudoku.cpp"
 using namespace std;
 
-constexpr int WINDOW_L = 1920;
-constexpr int WINDOW_W = 1080;
+constexpr int WINDOW_L = sqrt_N * 150;
+constexpr int WINDOW_W = sqrt_N * 300;
 
 vector<vector<QSpinBox*>> sudokuGrid;
 
@@ -67,6 +67,8 @@ MainWindow::MainWindow(QWidget *parent)
     this->setCentralWidget(container);
 
     QGridLayout *layout = new QGridLayout;
+    layout->setVerticalSpacing(-1);
+    layout->setHorizontalSpacing(-1);
 
     initializeSudokuGrid(layout);
 
