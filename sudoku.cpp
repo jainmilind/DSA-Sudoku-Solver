@@ -1,7 +1,4 @@
-#include <vector>
-#include <set>
-#include <chrono>
-#include <random>
+#include <bits/stdc++.h>
 using namespace std;
 
 constexpr int sqrt_N = 3;
@@ -38,7 +35,7 @@ bool canPlace(const vector<vector<int>> &grid, int val, int x, int y) {
 SUDOKU_STATUS getSudokuStatus(const vector<vector<int>> &grid) {
     int empty_cell_cnt = 0;
     for (int i = 0; i < N; ++i) {
-        set<int> cur;
+        unordered_set<int> cur;
         for (int j = 0; j < N; j++) {
             if (grid[i][j] == 0) {
                 ++empty_cell_cnt;
@@ -51,7 +48,7 @@ SUDOKU_STATUS getSudokuStatus(const vector<vector<int>> &grid) {
     }
     // for each column
     for (int i = 0; i < N; ++i) {
-        set<int> cur;
+        unordered_set<int> cur;
         for (int j = 0; j < N; j++) {
             if (grid[j][i] == 0) {
                 ++empty_cell_cnt;
@@ -65,7 +62,7 @@ SUDOKU_STATUS getSudokuStatus(const vector<vector<int>> &grid) {
     // for each box
     for (int i = 0; i < N; i += sqrt_N) {
         for (int j = 0; j < N; j += sqrt_N) {
-            set<int> cur;
+            unordered_set<int> cur;
             for (int k = j; k < sqrt_N + j; ++k) {
                 for (int l = i; l < sqrt_N + i; ++l) {
                     if (grid[k][l] == 0) {
@@ -110,34 +107,17 @@ bool solveSudokuGrid(vector<vector<int>> &grid, int x = 0, int y = 0) {
 }
 
 vector<vector<int>> generateRandomSudoku() {
-    vector<vector<int>> grid, gridCheck;
     mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-
-    do {
-        grid = vector<vector<int>>(N, vector<int>(N));
-        const int fill_count = rng() % N + N;
-        for (int i = 0; i < fill_count; ++i) {
-
-            int coords = uniform_int_distribution<int>(0, N * N - 1)(rng);
-            int x_coord = coords / N;
-            int y_coord = coords % N;
-            if (grid[x_coord][y_coord] == 0) {
-                for (int value = 1; value <= N; ++value) {
-                    grid[x_coord][y_coord] = value;
-
-                    if (getSudokuStatus(grid) == INVALID) {
-                        grid[x_coord][y_coord] = 0;
-                    }
-                    else {
-                        goto AC;
-                    }
-                }
-            }
-            else i--;
-            AC:;
-        }
-        gridCheck = grid;
-    } while (!solveSudokuGrid(gridCheck));
-
+    vector<vector<int>> grid(N, vector<int>(N));
+    iota(grid.front().begin(), grid.front().end(), 1);
+    shuffle(grid.front().begin(), grid.front().end(), rng);
+    assert(solveSudokuGrid(grid));
+    vector<int> pos(N * N);
+    iota(pos.begin(), pos.end(), 0);
+    shuffle(pos.begin(), pos.end(), rng);
+    for (int i = 0; i < N * (N - 2); i++) {
+        int x = pos[i];
+        grid[x / N][x % N] = 0;
+    }
     return grid;
 }
