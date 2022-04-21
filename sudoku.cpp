@@ -1,24 +1,43 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+// sqrt_N denotes the size of each smaller sub-box of the GUI Sudoku Grid Object
 constexpr int sqrt_N = 3;
-constexpr int N = sqrt_N * sqrt_N;    // N X N sudoku grid
 
+// N denotes the size of the overall grid: N X N GUI Sudoku Grid Object
+constexpr int N = sqrt_N * sqrt_N;
+
+/**
+    SUDOKU_STATUS denotes one of the three possible states the sudoku is in:
+        1. INVALID: The sudoku has an invalid row, column or box.
+        2. PARTIALLY_FILLED: The sudoku has all rows, columns and boxes as valid,
+        but is not completely filled.
+        3. COMPLETED: The sudoku has all rows, columns and boxes as valid and is
+        completely filled.
+*/
 enum SUDOKU_STATUS { INVALID, PARTIALLY_FILLED, COMPLETED };
 
+/**
+    Returns a boolean that indicates if we can place the digit with value
+    val at position (x,y) on a sudoku grid represented as a vector<vector<int>>
+*/
 bool canPlace(const vector<vector<int>> &grid, int val, int x, int y) {
+    // If grid[x][y] already has a number, return false
     if (grid[x][y] != 0) {
         return false;
     }
-    // iterate in column
+
+    // Check if column 'y' contains val and if it does, return false
     for (int i = 0; i < N; ++i) {
         if (grid[i][y] == val) return false;
     }
-    // iterate in row
+
+    // Check if rpw 'x' contains val and if it does, return false
     for (int j = 0; j < N; ++j) {
         if (grid[x][j] == val) return false;
     }
-    // iterate in box
+
+    // Check if the box containing (x,y) contains val and if it does, return false
     int box_top_x = (x / sqrt_N) * sqrt_N;
     int box_top_y = (y / sqrt_N) * sqrt_N;
     for (int i = box_top_x; i < box_top_x + sqrt_N; ++i) {
@@ -26,9 +45,15 @@ bool canPlace(const vector<vector<int>> &grid, int val, int x, int y) {
             if (grid[i][j] == val) return false;
         }
     }
+
+    // All conditions satisfied, val can be placed at (x,y)
     return true;
 }
 
+/**
+    Returns type SUDOKU_STATUS that indicates the status of a
+    sudoku grid represented as a vector<vector<int>>
+*/
 SUDOKU_STATUS getSudokuStatus(const vector<vector<int>> &grid) {
     bool empty_cell = false;
     for (int i = 0; i < N; ++i) {
@@ -77,6 +102,12 @@ SUDOKU_STATUS getSudokuStatus(const vector<vector<int>> &grid) {
     }
 }
 
+/**
+    Function that returns true if the sudoku grid represented as a vector<vector<int>>
+    can be solved assuming it has been filled validly till position (x,y)
+
+    If function returns true, the grid itself will contain the final solved answer.
+*/
 bool solveSudokuGrid(vector<vector<int>> &grid, int x = 0, int y = 0) {
     if (x == N) return true;
     if (y == N) return solveSudokuGrid(grid, x + 1, 0);
@@ -95,6 +126,10 @@ bool solveSudokuGrid(vector<vector<int>> &grid, int x = 0, int y = 0) {
     return false;
 }
 
+/**
+    Function that generates a random sudoku and returns it in the form
+    of a vector<vector<int>>
+*/
 vector<vector<int>> generateRandomSudoku() {
     mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
     vector<vector<int>> grid(N, vector<int>(N));
